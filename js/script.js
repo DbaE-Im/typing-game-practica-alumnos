@@ -9,7 +9,7 @@ const $exactitud = document.getElementById('results-exactitud'); // Mismo motivo
 const $ppm = document.getElementById('results-ppm'); // Se agregó para poder mostrar las palabras por minuto.
 const $button = document.getElementById('reload-button'); // Se cambió a getElementById por claridad y rendimiento.
 
-const INITIAL_TIME = 60;
+const INITIAL_TIME = 30;
 let words = [];
 let currentTime = INITIAL_TIME;
 
