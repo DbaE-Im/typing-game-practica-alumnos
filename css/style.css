@@ -40,7 +40,9 @@ input {
 
 p {
     display: flex;
+    flex-wrap: wrap;
     margin: 0;
+    gap: 10px;
 }
 
 letter {

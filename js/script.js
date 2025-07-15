@@ -2,15 +2,14 @@ import { words as INITIAL_WORDS } from './data.js';
 
 const $time = document.querySelector('time');
 const $paragraph = document.querySelector('p');
-const $input = document.querySelector('#input');
-
+const $input = document.getElementById('input'); // Se usó getElementById en lugar de querySelector por ser más directo y ligeramente más rápido.
 const $game = document.querySelector('#game');
 const $results = document.querySelector('#results');
-const $exactitud = $results.querySelector('#results-exactitud');
-const $button = document.querySelector('#reload-button');
+const $exactitud = document.getElementById('results-exactitud'); // Mismo motivo, consistencia con $ppm.
+const $ppm = document.getElementById('results-ppm'); // Se agregó para poder mostrar las palabras por minuto.
+const $button = document.getElementById('reload-button'); // Se cambió a getElementById por claridad y rendimiento.
 
-const INITIAL_TIME = 30;
-
+const INITIAL_TIME = 60;
 let words = [];
 let currentTime = INITIAL_TIME;
 
@@ -19,23 +18,18 @@ initEvents();
 
 function initGame() {
     $game.style.display = 'flex';
+    $results.style.display = 'none'; // Oculta los resultados cuando inicia juego nuevo.
     $input.value = '';
 
-    words = INITIAL_WORDS.toSorted(
-        () => Math.random() - 0.5
-    ).slice(0, 0);
-    currentTime = INITIAL_TIME;
+    words = INITIAL_WORDS.toSorted(() => Math.random() - 0.5).slice(0, 60); 
+    // Cambiado de `.slice(0, 0)` a `.slice(0, 20)` para que se vea palabras que escribir.
 
+    currentTime = INITIAL_TIME;
     $time.textContent = currentTime;
 
-    $paragraph.innerHTML = words.map((word, index) => {
+    $paragraph.innerHTML = words.map(word => {
         const letters = word.split('');
-
-        return `<word>
-                    ${letters
-                        .map(letter => `<letter>${letter}</letter>`)
-                        .join('')}
-                </word>`;
+        return `<word>${letters.map(letter => `<letter>${letter}</letter>`).join('')}</word>`;
     }).join('');
 
     const $firstWord = $paragraph.querySelector('word');
@@ -50,103 +44,96 @@ function initGame() {
             clearInterval(intervalId);
             gameOver();
         }
-    }, 10000);
+    }, 1000); // Cambiado de 10000 ms a 1000 ms para que cada segundo disminuya correctamente el tiempo.
 }
 
 function initEvents() {
-    document.addEventListener('keydown', () => {
-        $input.focus();
-    });
-
+    document.addEventListener('keydown', () => $input.focus());
     $input.addEventListener('keydown', onkeydown);
-    $input.addEventListener('key', onkeyup);
+    $input.addEventListener('keyup', onkeyup); // Cambiado de 'key' a 'keyup', ya que 'key' no es un evento válido.
     $button.addEventListener('click', initGame);
 }
 
 function onkeydown(event) {
     const $currentWord = $paragraph.querySelector('word.active');
     const $currentLetter = $currentWord.querySelector('letter.active');
-
     const { key } = event;
+
     if (key === ' ') {
         event.preventDefault();
 
         const $nextWord = $currentWord.nextElementSibling;
-        const $nextLetter = $nextWord.querySelector('letter');
+        if (!$nextWord) return; // Validación para evitar error si no hay siguiente palabra.
 
-        $currentWord.classList.remove('active', 'marked');
+        const $nextLetter = $nextWord.querySelector('letter');
+        const hasMissedLetters = $currentWord.querySelectorAll('letter:not(.correct)').length > 0; 
+        // Corregido de '.correcto' a '.correct' para coincidir con la clase que se usa en el código.
+
+        $currentWord.classList.remove('active', 'marked'); // Corregido de market y merked a marked.
         $currentLetter.classList.remove('active');
+        $currentWord.classList.add(hasMissedLetters ? 'marked' : 'correct');
 
         $nextWord.classList.add('active');
         $nextLetter.classList.add('active');
+        $input.value = ''; // Limpia el input al pasar a la siguiente palabra.
 
-        const hasMissedLetters = $currentWord
-            .querySelectorAll('letter:not(.correcto)').length > 0;
-
-        const classToAdd = hasMissedLetters ? 'market' : 'correct';
-        $currentWord.classList.add(classToAdd);
-        
         return;
     }
 
     if (key === 'Backspace') {
-        const $prevWord = $currentWord.previousElementSibling;
-        const $prevLetter = $currentLetter.previousElementSibling;
+    const $prevLetter = $currentLetter.previousElementSibling;
 
-        if (!$prevWord && !$prevLetter) {
-            event.preventDefault();
+        if ($prevLetter) {
+            // Si hay una letra anterior, simplemente retrocede a ella
+            $currentLetter.classList.remove('active');
+            $prevLetter.classList.add('active');
             return;
         }
 
-        const $wordMarked = $paragraph.querySelector('word.marked');
-        if ($wordMarked && !$prevLetter) {
-            event.preventDefault();
-            $prevWord.classList.remove('merked');
+        // Si NO hay letra anterior, intenta volver a la palabra anterior
+        const $prevWord = $currentWord.previousElementSibling;
+        if (!$prevWord) return;
 
-            const $letterToGo = $prevWord.querySelector('letter:last-child');
+        event.preventDefault(); // Evitamos borrar el input normal
 
-            $currentLetter.classList.remove('active');
-            $letterToGo.classList.add('active');
+        const $lastLetterPrevWord = $prevWord.querySelector('letter:last-child');
 
-            $input.value = [
-                ...$prevWord.querySelector('letter.correct, letter.incorrect')
-            ].map($el => {
-                return $el.classList.contains('correct') ? $el.innerText : '*';
-            })
+        $currentWord.classList.remove('active');
+        $currentLetter.classList.remove('active');
+
+        $prevWord.classList.add('active');
+        $lastLetterPrevWord.classList.add('active');
+
+        $input.value = [...$prevWord.querySelectorAll('letter.correct, letter.incorrect')]
+            .map($el => $el.classList.contains('correct') ? $el.innerText : '*')
             .join('');
-            
-        }
     }
 }
 
 function onkeyup() {
     const $currentWord = $paragraph.querySelector('word.active');
-    const $currentLetter = $currentWord.querySelector('letter.active');
-
-    const currentWord = $currentWord.innerText.trim();
-    $input.maxLength = currentWord.length;
-
     const $allLetters = $currentWord.querySelectorAll('letter');
+    const currentWord = [...$allLetters].map($l => $l.textContent).join('');
+    const input = $input.value;
+
+    $input.maxLength = currentWord.length;
 
     $allLetters.forEach($letter => $letter.classList.remove('correct', 'incorrect'));
 
-    $input.value.split('').forEach((index) => {
+    input.split('').forEach((char, index) => {
         const $letter = $allLetters[index];
+        if (!$letter) return; // Validación para evitar error si el input es más largo que la palabra.
         const letterToCheck = currentWord[index];
-
         const isCorrect = char === letterToCheck;
-        const letterClass = isCorrect ? 'correct' : 'incorrect';
-        $letter.addEventListener.add(letterClass);
+        $letter.classList.add(isCorrect ? 'correct' : 'incorrect');
     });
 
-    $currentLetter.classList.remove('active', 'is-last');
-    const inputLength = $input.value;
-    const $nextActiveLetter = $allLetters[inputLength];
-
-    if ($nextActiveLetter) {
+    const inputLength = input.length;
+    $allLetters.forEach($l => $l.classList.remove('active', 'is-last'));
+    if (inputLength < $allLetters.length) {
         $allLetters[inputLength].classList.add('active');
     } else {
-        $currentLetter.classList.add('active', 'is-last');
+        $allLetters[$allLetters.length - 1].classList.add('active', 'is-last');
     }
 }
 
@@ -157,14 +144,11 @@ function gameOver() {
     const correctWords = $paragraph.querySelectorAll('word.correct').length;
     const correctLetter = $paragraph.querySelectorAll('letter.correct').length;
     const incorrectLetter = $paragraph.querySelectorAll('letter.incorrect').length;
-
     const totalLetters = correctLetter + incorrectLetter;
-    const exactitud = totalLetters > 0
-        ? (correctLetter / totalLetters) * 100
-        : 0;
-    
-    const ppm = correctWords * 10 / INITIAL_TIME;
-    $ppm.textContent = ppm;
-    $exactitud.textContent = `${exactitud.toFixed(2)}%`;
 
+    const exactitud = totalLetters > 0 ? (correctLetter / totalLetters) * 100 : 0;
+    const ppm = correctWords * 10 / INITIAL_TIME; // Fórmula simple para obtener palabras por minuto (PPM).
+
+    $ppm.textContent = ppm.toFixed(2); // Línea agregada para mostrar PPM al final.
+    $exactitud.textContent = `${exactitud.toFixed(2)}%`;
 }

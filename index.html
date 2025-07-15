@@ -1,35 +1,49 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="css/style.css">
-    <title>Typing - Game</title>
+    <meta charset="UTF-8"> <!-- Declaración de codificación de caracteres UTF-8 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Escala responsiva para móviles -->
+    <link rel="stylesheet" href="css/style.css"> <!-- Enlace al archivo de estilos -->
+    <title>Typing - Game</title> <!-- Título de la pestaña del navegador -->
 </head>
 <body>
     <main>
-        <section id="games">
-            <time></time>
-            <p></p>
-            <input>
+        <!-- Sección principal del juego -->
+        <section id="game"> <!-- ✅ ID corregido: antes decía "games", pero el JS busca "#game" -->
+            <time></time> <!-- Temporizador del juego -->
+            <p></p> <!-- Contenedor donde se insertan las palabras como <word> y <letter> -->
+
+            <input id="input" type="text" autocomplete="off" /> 
+            <!-- ✅ Atributos añadidos:
+                - id="input" para vincular el campo con el script JS
+                - type="text" para capturar texto
+                - autocomplete="off" para evitar sugerencias del navegador -->
         </section>
+
+        <!-- Sección de resultados del juego -->
         <section id="results">
-            <h2>ppm</h2>
-            <h3 id="results-wpm"></h3>
+            <h2>ppm</h2> <!-- Título para mostrar palabras por minuto -->
 
-            <h2>Exactitud</h2>
-            <h3 id="results-exactitud"></h3>
+            <h3 id="results-ppm"></h3> 
+            <!-- ✅ ID corregido: antes era "results-wpm", pero el JS usa "results-ppm" para mostrar el resultado -->
 
-            <button id="reluad-button">
-                <svg width="24"  height="24" viewBox="0 0 24 24"  fill="none"  stroke="currentColor" stroke-width="1.5"  stroke-linecap="round" stroke-linejoin="round">
-                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                <path d="M19.933 13.041a8 8 0 1 1 -9.925 -8.788c3.899 -1 7.935 1.007 9.425 4.747" />
-                <path d="M20 4v5h-5" />
+            <h2>Exactitud</h2> <!-- Título para mostrar la precisión del jugador -->
+            <h3 id="results-exactitud"></h3> <!-- Muestra el porcentaje de precisión -->
+
+            <button id="reload-button"> <!-- ✅ ID corregido: antes era "reluad-button", corregido a "reload-button" -->
+                <!-- Ícono SVG de recarga -->
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                    <path d="M19.933 13.041a8 8 0 1 1 -9.925 -8.788c3.899 -1 7.935 1.007 9.425 4.747" />
+                    <path d="M20 4v5h-5" />
                 </svg>
             </button>
-
         </section>
     </main>
-    <script src="js/script.js"></script>
+
+    <script type="module" src="js/script.js"></script> 
+    <!-- ✅ Atributo type="module" añadido:
+        Necesario para que el navegador entienda las instrucciones de import/export ESModules en script.js -->
 </body>
 </html>
